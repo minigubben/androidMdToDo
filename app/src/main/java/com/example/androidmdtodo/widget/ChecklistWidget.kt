@@ -111,6 +111,7 @@ private fun ChecklistWidgetContent(model: WidgetModel) {
                 message = model.message,
                 buttonLabel = "Choose file",
                 appWidgetId = model.appWidgetId,
+                showRefresh = true,
             )
 
             is WidgetModel.Ready -> ReadyState(model)
@@ -124,6 +125,7 @@ private fun EmptyState(
     message: String,
     buttonLabel: String,
     appWidgetId: Int,
+    showRefresh: Boolean = false,
 ) {
     Column(
         modifier = GlanceModifier.fillMaxSize(),
@@ -144,6 +146,13 @@ private fun EmptyState(
                 color = ColorProvider(day = Color(0xFF4A5C63), night = Color(0xFFB4C5CB)),
             ),
         )
+        if (showRefresh) {
+            Spacer(modifier = GlanceModifier.height(12.dp))
+            Button(
+                text = "Refresh",
+                onClick = actionRunCallback<ChecklistRefreshActionCallback>(),
+            )
+        }
         Spacer(modifier = GlanceModifier.height(12.dp))
         Button(
             text = buttonLabel,
@@ -166,6 +175,14 @@ private fun ReadyState(model: WidgetModel.Ready) {
                 color = ColorProvider(day = Color(0xFF1D2A30), night = Color(0xFFF2EFE6)),
             ),
             maxLines = 1,
+        )
+        Spacer(modifier = GlanceModifier.height(8.dp))
+        Text(
+            text = "Refresh",
+            modifier = GlanceModifier.clickable(actionRunCallback<ChecklistRefreshActionCallback>()),
+            style = TextStyle(
+                color = ColorProvider(day = Color(0xFF345560), night = Color(0xFF9CC3CE)),
+            ),
         )
         Spacer(modifier = GlanceModifier.height(8.dp))
 

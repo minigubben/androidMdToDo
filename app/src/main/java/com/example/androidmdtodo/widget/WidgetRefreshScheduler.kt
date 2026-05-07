@@ -2,7 +2,9 @@ package com.example.androidmdtodo.widget
 
 import android.content.Context
 import androidx.work.CoroutineWorker
+import androidx.work.ExistingWorkPolicy
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -14,6 +16,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 object WidgetRefreshScheduler {
+    private const val immediateRefreshWorkName = "widget-immediate-refresh"
     private const val refreshWorkName = "widget-periodic-refresh"
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -35,6 +38,14 @@ object WidgetRefreshScheduler {
                 workManager.cancelUniqueWork(refreshWorkName)
             }
         }
+    }
+
+    fun requestImmediate(context: Context) {
+        WorkManager.getInstance(context.applicationContext).enqueueUniqueWork(
+            immediateRefreshWorkName,
+            ExistingWorkPolicy.REPLACE,
+            OneTimeWorkRequestBuilder<WidgetRefreshWorker>().build(),
+        )
     }
 }
 

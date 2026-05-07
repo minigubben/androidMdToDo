@@ -323,6 +323,8 @@ class ChecklistWidgetConfigActivity : ComponentActivity() {
                 ),
             )
             WidgetRefreshCoordinator.sync(this@ChecklistWidgetConfigActivity)
+            WidgetRefreshScheduler.requestImmediate(this@ChecklistWidgetConfigActivity)
+            WidgetUpdater.updateAll(this@ChecklistWidgetConfigActivity)
 
             val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
             setResult(Activity.RESULT_OK, resultValue)

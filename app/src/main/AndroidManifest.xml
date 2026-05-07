@@ -38,6 +38,10 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/checklist_widget_info" />
         </receiver>
+
+        <receiver
+            android:name=".widget.WidgetRefreshAlarmReceiver"
+            android:exported="false" />
     </application>
 
 </manifest>

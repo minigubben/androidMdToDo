@@ -31,7 +31,10 @@ object WidgetUpdater {
     fun refreshConfiguredWidget(context: Context, appWidgetId: Int) {
         val appContext = context.applicationContext
         scope.launch {
-            repeat(10) { attempt ->
+            WidgetRefreshScheduler.requestImmediate(appContext)
+            WidgetUpdater.updateAll(appContext)
+
+            repeat(30) { attempt ->
                 val glanceId = runCatching {
                     GlanceAppWidgetManager(appContext).getGlanceIdBy(appWidgetId)
                 }.getOrNull()
@@ -41,8 +44,12 @@ object WidgetUpdater {
                     return@launch
                 }
 
-                if (attempt < 9) {
-                    delay(500)
+                if (attempt < 29) {
+                    if (attempt % 5 == 4) {
+                        WidgetRefreshScheduler.requestImmediate(appContext)
+                        WidgetUpdater.updateAll(appContext)
+                    }
+                    delay(1000)
                 }
             }
             Log.w("WidgetUpdater", "Timed out waiting for widget $appWidgetId to become available")

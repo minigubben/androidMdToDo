@@ -67,3 +67,27 @@ class ChecklistToggleActionCallback : ActionCallback {
         }
     }
 }
+
+class ChecklistRefreshActionCallback : ActionCallback {
+    override suspend fun onAction(
+        context: Context,
+        glanceId: GlanceId,
+        parameters: ActionParameters,
+    ) {
+        val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(glanceId)
+        val configRepository = WidgetConfigRepository(context)
+        val config = configRepository.getConfig(appWidgetId)
+
+        WidgetRefreshCoordinator.sync(context)
+        WidgetRefreshScheduler.requestImmediate(context)
+        WidgetUpdater.updateWidget(context, glanceId)
+
+        if (config != null) {
+            WidgetUpdater.updateWidgets(
+                context,
+                configRepository.getWidgetIdsForUri(config.fileUri)
+                    .filterNot { it == appWidgetId },
+            )
+        }
+    }
+}

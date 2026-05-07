@@ -6,5 +6,6 @@ object WidgetRefreshCoordinator {
     fun sync(context: Context) {
         WidgetFileObserverRegistry.sync(context)
         WidgetRefreshScheduler.sync(context)
+        WidgetRefreshAlarmScheduler.sync(context)
     }
 }
