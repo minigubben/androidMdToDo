@@ -1,4 +1,4 @@
-name: Release Unsigned APK
+name: Release APK
 
 on:
   push:
@@ -56,22 +56,22 @@ jobs:
               output.write(f"version_code={version_code}\n")
               output.write(f"version_name={version_name}\n")
               output.write(f"tag_name={tag_name}\n")
-              output.write(f"asset_name=androidMDToDo-{tag_name}-unsigned.apk\n")
+              output.write(f"asset_name=androidMDToDo-{tag_name}.apk\n")
           PY
 
-      - name: Build unsigned release APK
+      - name: Build release APK signed with debug key
         run: scripts/docker-gradle.sh assembleRelease
 
       - name: Stage release asset
         id: asset
         shell: bash
         run: |
-          source_path="app/build/outputs/apk/release/app-release-unsigned.apk"
+          source_path="app/build/outputs/apk/release/app-release.apk"
           asset_dir="dist"
           asset_path="${asset_dir}/${{ steps.version.outputs.asset_name }}"
 
           if [[ ! -f "${source_path}" ]]; then
-            echo "Expected unsigned APK at ${source_path}, but it was not produced." >&2
+            echo "Expected signed APK at ${source_path}, but it was not produced." >&2
             exit 1
           fi
 
