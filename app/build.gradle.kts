@@ -21,6 +21,15 @@ android {
     namespace = "com.example.androidmdtodo"
     compileSdk = 36
 
+    signingConfigs {
+        create("repoDebug") {
+            storeFile = rootProject.file("signing/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.example.androidmdtodo"
         minSdk = 26
@@ -32,8 +41,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("repoDebug")
+        }
+
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("repoDebug")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

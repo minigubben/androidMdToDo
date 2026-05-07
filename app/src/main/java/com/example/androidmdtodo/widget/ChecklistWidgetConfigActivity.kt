@@ -309,25 +309,32 @@ class ChecklistWidgetConfigActivity : ComponentActivity() {
     }
 
     private fun persistSelection(uri: Uri) {
+        val stableUri = normalizeSelectedFileUri(uri) ?: uri
         lifecycleScope.launch {
             val fileRepository = MarkdownFileRepository(this@ChecklistWidgetConfigActivity)
             val configRepository = WidgetConfigRepository(this@ChecklistWidgetConfigActivity)
-            val displayName = fileRepository.resolveDisplayName(uri)
+            val displayName = fileRepository.resolveDisplayName(stableUri)
             configRepository.saveConfig(
                 WidgetConfig(
                     appWidgetId = appWidgetId,
-                    fileUri = uri.toString(),
+                    fileUri = stableUri.toString(),
                     displayName = displayName,
                     lastError = null,
                 ),
             )
             WidgetFileObserverRegistry.sync(this@ChecklistWidgetConfigActivity)
-            WidgetUpdater.updateAll(this@ChecklistWidgetConfigActivity)
 
             val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
             setResult(Activity.RESULT_OK, resultValue)
             finish()
+            WidgetUpdater.refreshConfiguredWidget(applicationContext, appWidgetId)
         }
+    }
+
+    private fun normalizeSelectedFileUri(uri: Uri): Uri? {
+        val rootUri = treeUri ?: return null
+        val documentId = runCatching { DocumentsContract.getDocumentId(uri) }.getOrNull() ?: return null
+        return DocumentsContract.buildDocumentUriUsingTree(rootUri, documentId)
     }
 
     companion object {
