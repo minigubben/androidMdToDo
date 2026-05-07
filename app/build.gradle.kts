@@ -1,8 +1,21 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+
+val versionProperties = Properties().apply {
+    val versionFile = rootProject.file("version.properties")
+    require(versionFile.isFile) {
+        "Missing version properties file: ${versionFile.absolutePath}"
+    }
+    versionFile.inputStream().use(::load)
+}
+
+val appVersionCode = versionProperties.getProperty("VERSION_CODE").toInt()
+val appVersionName = versionProperties.getProperty("VERSION_NAME")
 
 android {
     namespace = "com.example.androidmdtodo"
@@ -12,8 +25,8 @@ android {
         applicationId = "com.example.androidmdtodo"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = appVersionCode
+        versionName = appVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

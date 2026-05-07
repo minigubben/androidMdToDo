@@ -2,20 +2,15 @@ name: Release Unsigned APK
 
 on:
   push:
-    tags:
-      - "v*"
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Release tag to publish, for example v1.0.0"
-        required: true
-        type: string
+    branches:
+      - main
 
 permissions:
   contents: write
 
 jobs:
   release:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
 
     steps:
@@ -24,61 +19,96 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Resolve release metadata
-        id: meta
+      - name: Sync with latest main
+        run: |
+          git checkout main
+          git pull --ff-only origin main
+
+      - name: Bump app version
+        id: version
         shell: bash
         run: |
-          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
-            tag_name="${{ inputs.tag }}"
-          else
-            tag_name="${GITHUB_REF_NAME}"
-          fi
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
 
-          asset_dir="dist"
-          asset_name="androidMDToDo-${tag_name}-unsigned.apk"
-          asset_path="${asset_dir}/${asset_name}"
+          version_file = Path("version.properties")
+          values = {}
+          for raw_line in version_file.read_text(encoding="utf-8").splitlines():
+              line = raw_line.strip()
+              if not line or line.startswith("#"):
+                  continue
+              key, value = line.split("=", 1)
+              values[key] = value
 
-          mkdir -p "${asset_dir}"
+          version_code = int(values["VERSION_CODE"]) + 1
+          major, minor, patch = (int(part) for part in values["VERSION_NAME"].split("."))
+          version_name = f"{major}.{minor}.{patch + 1}"
+          tag_name = f"v{version_name}"
 
-          {
-            echo "tag_name=${tag_name}"
-            echo "asset_name=${asset_name}"
-            echo "asset_path=${asset_path}"
-          } >> "${GITHUB_OUTPUT}"
+          version_file.write_text(
+              f"VERSION_CODE={version_code}\nVERSION_NAME={version_name}\n",
+              encoding="utf-8",
+          )
+
+          output_file = Path(os.environ["GITHUB_OUTPUT"])
+          with output_file.open("a", encoding="utf-8") as output:
+              output.write(f"version_code={version_code}\n")
+              output.write(f"version_name={version_name}\n")
+              output.write(f"tag_name={tag_name}\n")
+              output.write(f"asset_name=androidMDToDo-{tag_name}-unsigned.apk\n")
+          PY
 
       - name: Build unsigned release APK
         run: scripts/docker-gradle.sh assembleRelease
 
       - name: Stage release asset
+        id: asset
         shell: bash
         run: |
           source_path="app/build/outputs/apk/release/app-release-unsigned.apk"
+          asset_dir="dist"
+          asset_path="${asset_dir}/${{ steps.version.outputs.asset_name }}"
 
           if [[ ! -f "${source_path}" ]]; then
             echo "Expected unsigned APK at ${source_path}, but it was not produced." >&2
             exit 1
           fi
 
-          cp "${source_path}" "${{ steps.meta.outputs.asset_path }}"
+          mkdir -p "${asset_dir}"
+          cp "${source_path}" "${asset_path}"
+          echo "asset_path=${asset_path}" >> "${GITHUB_OUTPUT}"
+
+      - name: Commit version bump
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.version_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add version.properties
+          git commit -m "chore: release v${VERSION_NAME} [skip release]"
+          git push origin HEAD:main
+
+      - name: Create and push tag
+        env:
+          TAG_NAME: ${{ steps.version.outputs.tag_name }}
+        run: |
+          git tag "${TAG_NAME}"
+          git push origin "${TAG_NAME}"
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.meta.outputs.asset_name }}
-          path: ${{ steps.meta.outputs.asset_path }}
+          name: ${{ steps.version.outputs.asset_name }}
+          path: ${{ steps.asset.outputs.asset_path }}
 
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG_NAME: ${{ steps.meta.outputs.tag_name }}
-          ASSET_PATH: ${{ steps.meta.outputs.asset_path }}
+          TAG_NAME: ${{ steps.version.outputs.tag_name }}
+          ASSET_PATH: ${{ steps.asset.outputs.asset_path }}
         shell: bash
         run: |
-          if gh release view "${TAG_NAME}" >/dev/null 2>&1; then
-            gh release upload "${TAG_NAME}" "${ASSET_PATH}" --clobber
-          else
-            gh release create "${TAG_NAME}" "${ASSET_PATH}" \
-              --title "${TAG_NAME}" \
-              --generate-notes \
-              --target "${GITHUB_SHA}"
-          fi
+          gh release create "${TAG_NAME}" "${ASSET_PATH}" \
+            --title "${TAG_NAME}" \
+            --generate-notes
