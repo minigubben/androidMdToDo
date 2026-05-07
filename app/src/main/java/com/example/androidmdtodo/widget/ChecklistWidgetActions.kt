@@ -47,7 +47,7 @@ class ChecklistToggleActionCallback : ActionCallback {
                     fileRepository.write(uri, mutation.document)
                     configRepository.clearError(appWidgetId)
                     WidgetRefreshCoordinator.sync(context)
-                    WidgetRefreshScheduler.requestImmediate(context)
+                    WidgetRefreshScheduler.requestRefreshBurst(context)
                     WidgetUpdater.refreshWidgetFamily(context, appWidgetId, config.fileUri)
                 }
 
@@ -76,7 +76,7 @@ class ChecklistRefreshActionCallback : ActionCallback {
         val config = configRepository.getConfig(appWidgetId)
 
         WidgetRefreshCoordinator.sync(context)
-        WidgetRefreshScheduler.requestImmediate(context)
+        WidgetRefreshScheduler.requestRefreshBurst(context)
         WidgetUpdater.refreshWidgetFamily(context, appWidgetId, config?.fileUri)
     }
 }

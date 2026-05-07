@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 object WidgetRefreshScheduler {
     private const val immediateRefreshWorkName = "widget-immediate-refresh"
     private const val refreshWorkName = "widget-periodic-refresh"
+    private val refreshBurstDelaysMillis = listOf(0L, 5_000L, 30_000L, 2 * 60 * 1000L)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     fun sync(context: Context) {
@@ -41,11 +42,32 @@ object WidgetRefreshScheduler {
     }
 
     fun requestImmediate(context: Context) {
-        WorkManager.getInstance(context.applicationContext).enqueueUniqueWork(
-            immediateRefreshWorkName,
-            ExistingWorkPolicy.REPLACE,
-            OneTimeWorkRequestBuilder<WidgetRefreshWorker>().build(),
-        )
+        requestRefreshBurst(context, includeDelayedRefreshes = false)
+    }
+
+    fun requestRefreshBurst(
+        context: Context,
+        includeDelayedRefreshes: Boolean = true,
+    ) {
+        val appContext = context.applicationContext
+        val workManager = WorkManager.getInstance(appContext)
+        val delays = if (includeDelayedRefreshes) refreshBurstDelaysMillis else listOf(0L)
+
+        delays.forEach { delayMillis ->
+            val workName = if (delayMillis == 0L) {
+                immediateRefreshWorkName
+            } else {
+                "$immediateRefreshWorkName-$delayMillis"
+            }
+            val request = OneTimeWorkRequestBuilder<WidgetRefreshWorker>()
+                .setInitialDelay(delayMillis, TimeUnit.MILLISECONDS)
+                .build()
+            workManager.enqueueUniqueWork(
+                workName,
+                ExistingWorkPolicy.REPLACE,
+                request,
+            )
+        }
     }
 }
 

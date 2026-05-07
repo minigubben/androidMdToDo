@@ -16,12 +16,13 @@ class MarkdownFileRepository(private val context: Context) {
 
     fun write(uri: Uri, contents: String) {
         val resolver = context.contentResolver
-        resolver.openOutputStream(uri, "wt")?.bufferedWriter(Charsets.UTF_8)?.use { writer ->
+        val outputStream = resolver.openOutputStream(uri, "wt")
+            ?: throw IOException("Unable to open markdown file for writing.")
+        outputStream.bufferedWriter(Charsets.UTF_8).use { writer ->
             writer.write(contents)
             writer.flush()
-            return
         }
-        throw IOException("Unable to open markdown file for writing.")
+        resolver.notifyChange(uri, null)
     }
 
     fun resolveDisplayName(uri: Uri): String {
