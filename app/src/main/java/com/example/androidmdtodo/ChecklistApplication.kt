@@ -1,11 +1,11 @@
 package com.example.androidmdtodo
 
 import android.app.Application
-import com.example.androidmdtodo.widget.WidgetFileObserverRegistry
+import com.example.androidmdtodo.widget.WidgetRefreshCoordinator
 
 class ChecklistApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        WidgetFileObserverRegistry.sync(this)
+        WidgetRefreshCoordinator.sync(this)
     }
 }

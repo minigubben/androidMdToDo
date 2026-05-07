@@ -85,7 +85,7 @@ class ChecklistWidget : GlanceAppWidget() {
     override suspend fun onDelete(context: Context, glanceId: androidx.glance.GlanceId) {
         val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(glanceId)
         WidgetConfigRepository(context).deleteConfig(appWidgetId)
-        WidgetFileObserverRegistry.sync(context)
+        WidgetRefreshCoordinator.sync(context)
     }
 }
 

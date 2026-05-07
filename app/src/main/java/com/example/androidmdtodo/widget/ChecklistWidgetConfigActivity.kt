@@ -322,7 +322,7 @@ class ChecklistWidgetConfigActivity : ComponentActivity() {
                     lastError = null,
                 ),
             )
-            WidgetFileObserverRegistry.sync(this@ChecklistWidgetConfigActivity)
+            WidgetRefreshCoordinator.sync(this@ChecklistWidgetConfigActivity)
 
             val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
             setResult(Activity.RESULT_OK, resultValue)
