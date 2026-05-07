@@ -52,6 +52,7 @@ MERGED from [androidx.datastore:datastore-android:1.1.4] /home/gradle/.gradle/ca
 MERGED from [androidx.datastore:datastore-preferences-android:1.1.4] /home/gradle/.gradle/caches/8.11.1/transforms/409648bf07d1de01bd5869531cba6737/transformed/datastore-preferences-release/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.room:room-runtime:2.6.1] /home/gradle/.gradle/caches/8.11.1/transforms/41673185ff18b76adc1f680d90b2b62c/transformed/room-runtime-2.6.1/AndroidManifest.xml:17:1-31:12
 MERGED from [androidx.room:room-ktx:2.6.1] /home/gradle/.gradle/caches/8.11.1/transforms/41d83424643863414899e831456952a9/transformed/room-ktx-2.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.documentfile:documentfile:1.0.1] /home/gradle/.gradle/caches/8.11.1/transforms/7116387e3f8d74a35791a41e29c12eef/transformed/documentfile-1.0.1/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /home/gradle/.gradle/caches/8.11.1/transforms/129738286564b4db46c0972c95e0b9e7/transformed/cursoradapter-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.cardview:cardview:1.0.0] /home/gradle/.gradle/caches/8.11.1/transforms/e9030724b17477f85420c012ff0cbed2/transformed/cardview-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.interpolator:interpolator:1.0.0] /home/gradle/.gradle/caches/8.11.1/transforms/c799420e8edd1684372e6d77d985d7f3/transformed/interpolator-1.0.0/AndroidManifest.xml:17:1-22:12
@@ -61,7 +62,6 @@ MERGED from [androidx.tracing:tracing-ktx:1.2.0] /home/gradle/.gradle/caches/8.1
 MERGED from [androidx.tracing:tracing:1.2.0] /home/gradle/.gradle/caches/8.11.1/transforms/6f82126adee3cc318abfd220fcd02dd0/transformed/tracing-1.2.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/gradle/.gradle/caches/8.11.1/transforms/d6b80e00fd64af731893f3b3640cab9a/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:17:1-27:12
 MERGED from [androidx.arch.core:core-runtime:2.2.0] /home/gradle/.gradle/caches/8.11.1/transforms/1f999ce5484272b6b141adcf3a28f94b/transformed/core-runtime-2.2.0/AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.documentfile:documentfile:1.0.0] /home/gradle/.gradle/caches/8.11.1/transforms/c312da31e442bb658783cb0ede741686/transformed/documentfile-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /home/gradle/.gradle/caches/8.11.1/transforms/47d75565ca881029a16003868cb93651/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.print:print:1.0.0] /home/gradle/.gradle/caches/8.11.1/transforms/9d638445c1e7342f6c54e7caedb4fe54/transformed/print-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.sqlite:sqlite-framework:2.4.0] /home/gradle/.gradle/caches/8.11.1/transforms/2b13c7754d9b566331e9e24e20120d1b/transformed/sqlite-framework-2.4.0/AndroidManifest.xml:17:1-22:12
@@ -268,6 +268,8 @@ MERGED from [androidx.room:room-runtime:2.6.1] /home/gradle/.gradle/caches/8.11.
 MERGED from [androidx.room:room-runtime:2.6.1] /home/gradle/.gradle/caches/8.11.1/transforms/41673185ff18b76adc1f680d90b2b62c/transformed/room-runtime-2.6.1/AndroidManifest.xml:21:5-44
 MERGED from [androidx.room:room-ktx:2.6.1] /home/gradle/.gradle/caches/8.11.1/transforms/41d83424643863414899e831456952a9/transformed/room-ktx-2.6.1/AndroidManifest.xml:20:5-44
 MERGED from [androidx.room:room-ktx:2.6.1] /home/gradle/.gradle/caches/8.11.1/transforms/41d83424643863414899e831456952a9/transformed/room-ktx-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.documentfile:documentfile:1.0.1] /home/gradle/.gradle/caches/8.11.1/transforms/7116387e3f8d74a35791a41e29c12eef/transformed/documentfile-1.0.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.documentfile:documentfile:1.0.1] /home/gradle/.gradle/caches/8.11.1/transforms/7116387e3f8d74a35791a41e29c12eef/transformed/documentfile-1.0.1/AndroidManifest.xml:20:5-44
 MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /home/gradle/.gradle/caches/8.11.1/transforms/129738286564b4db46c0972c95e0b9e7/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /home/gradle/.gradle/caches/8.11.1/transforms/129738286564b4db46c0972c95e0b9e7/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.cardview:cardview:1.0.0] /home/gradle/.gradle/caches/8.11.1/transforms/e9030724b17477f85420c012ff0cbed2/transformed/cardview-1.0.0/AndroidManifest.xml:20:5-44
@@ -286,8 +288,6 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/gradl
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/gradle/.gradle/caches/8.11.1/transforms/d6b80e00fd64af731893f3b3640cab9a/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.arch.core:core-runtime:2.2.0] /home/gradle/.gradle/caches/8.11.1/transforms/1f999ce5484272b6b141adcf3a28f94b/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.arch.core:core-runtime:2.2.0] /home/gradle/.gradle/caches/8.11.1/transforms/1f999ce5484272b6b141adcf3a28f94b/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
-MERGED from [androidx.documentfile:documentfile:1.0.0] /home/gradle/.gradle/caches/8.11.1/transforms/c312da31e442bb658783cb0ede741686/transformed/documentfile-1.0.0/AndroidManifest.xml:20:5-44
-MERGED from [androidx.documentfile:documentfile:1.0.0] /home/gradle/.gradle/caches/8.11.1/transforms/c312da31e442bb658783cb0ede741686/transformed/documentfile-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /home/gradle/.gradle/caches/8.11.1/transforms/47d75565ca881029a16003868cb93651/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /home/gradle/.gradle/caches/8.11.1/transforms/47d75565ca881029a16003868cb93651/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.print:print:1.0.0] /home/gradle/.gradle/caches/8.11.1/transforms/9d638445c1e7342f6c54e7caedb4fe54/transformed/print-1.0.0/AndroidManifest.xml:20:5-44

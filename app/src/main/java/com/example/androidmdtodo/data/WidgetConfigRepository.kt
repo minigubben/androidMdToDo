@@ -19,6 +19,10 @@ class WidgetConfigRepository(private val context: Context) {
         return preferences.toWidgetConfig(appWidgetId)
     }
 
+    suspend fun getLastTreeUri(): String? {
+        return readPreferences()[lastTreeUriKey]
+    }
+
     suspend fun getAllConfigs(): List<WidgetConfig> {
         val preferences = readPreferences()
         val widgetIds = preferences.asMap().keys
@@ -43,6 +47,12 @@ class WidgetConfigRepository(private val context: Context) {
             } else {
                 prefs[errorKey(config.appWidgetId)] = config.lastError
             }
+        }
+    }
+
+    suspend fun setLastTreeUri(uri: String) {
+        context.widgetDataStore.edit { prefs ->
+            prefs[lastTreeUriKey] = uri
         }
     }
 
@@ -96,4 +106,6 @@ class WidgetConfigRepository(private val context: Context) {
     private fun uriKey(appWidgetId: Int) = stringPreferencesKey("widget.$appWidgetId.uri")
     private fun nameKey(appWidgetId: Int) = stringPreferencesKey("widget.$appWidgetId.name")
     private fun errorKey(appWidgetId: Int) = stringPreferencesKey("widget.$appWidgetId.error")
+
+    private val lastTreeUriKey = stringPreferencesKey("widget.lastTreeUri")
 }

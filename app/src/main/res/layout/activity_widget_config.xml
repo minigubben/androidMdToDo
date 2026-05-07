@@ -3,7 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/sand"
-    android:gravity="center"
     android:orientation="vertical"
     android:padding="24dp">
 
@@ -17,19 +16,82 @@
 
     <TextView
         android:id="@+id/configBody"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:gravity="center"
+        android:gravity="start"
         android:text="@string/widget_config_body"
         android:textAppearance="?attr/textAppearanceBodyLarge"
         android:textColor="@color/ink" />
 
-    <Button
-        android:id="@+id/pickFileButton"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="@string/widget_config_button" />
+        android:layout_marginTop="20dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/pickFolderButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/widget_config_pick_folder" />
+
+        <Button
+            android:id="@+id/upButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:enabled="false"
+            android:text="@string/widget_config_up" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/currentFolderLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/widget_config_current_folder"
+        android:textAppearance="?attr/textAppearanceTitleSmall"
+        android:textColor="@color/ink"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/currentFolderValue"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:minLines="2"
+        android:text="@string/widget_config_no_folder"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textColor="@color/ink_soft" />
+
+    <TextView
+        android:id="@+id/fileBrowserHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/widget_config_hint"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textColor="@color/ink_soft" />
+
+    <TextView
+        android:id="@+id/emptyStateText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/widget_config_empty"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textColor="@color/ink_soft" />
+
+    <ListView
+        android:id="@+id/fileListView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="12dp"
+        android:layout_weight="1"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="8dp" />
 
 </LinearLayout>

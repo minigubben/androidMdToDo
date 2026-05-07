@@ -47,14 +47,16 @@ class ChecklistToggleActionCallback : ActionCallback {
                 is MutationResult.Updated -> {
                     fileRepository.write(uri, mutation.document)
                     configRepository.clearError(appWidgetId)
+                    WidgetUpdater.updateWidget(context, glanceId)
                     WidgetUpdater.updateWidgets(
                         context,
-                        configRepository.getWidgetIdsForUri(config.fileUri),
+                        configRepository.getWidgetIdsForUri(config.fileUri)
+                            .filterNot { it == appWidgetId },
                     )
                 }
 
                 MutationResult.Stale -> {
-                    WidgetUpdater.updateWidget(context, appWidgetId)
+                    WidgetUpdater.updateWidget(context, glanceId)
                 }
             }
         } catch (exception: Exception) {
@@ -62,7 +64,7 @@ class ChecklistToggleActionCallback : ActionCallback {
                 appWidgetId,
                 exception.message ?: context.getString(R.string.error_update_failed),
             )
-            WidgetUpdater.updateWidget(context, appWidgetId)
+            WidgetUpdater.updateWidget(context, glanceId)
         }
 
         WidgetRefreshWorker.schedule(context)
@@ -76,7 +78,16 @@ class ChecklistRefreshActionCallback : ActionCallback {
         parameters: ActionParameters,
     ) {
         val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(glanceId)
-        WidgetUpdater.updateWidget(context, appWidgetId)
+        val configRepository = WidgetConfigRepository(context)
+        val config = configRepository.getConfig(appWidgetId)
+        WidgetUpdater.updateWidget(context, glanceId)
+        if (config != null) {
+            WidgetUpdater.updateWidgets(
+                context,
+                configRepository.getWidgetIdsForUri(config.fileUri)
+                    .filterNot { it == appWidgetId },
+            )
+        }
         WidgetRefreshWorker.schedule(context)
     }
 }
