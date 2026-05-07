@@ -46,16 +46,13 @@ class ChecklistToggleActionCallback : ActionCallback {
                 is MutationResult.Updated -> {
                     fileRepository.write(uri, mutation.document)
                     configRepository.clearError(appWidgetId)
-                    WidgetUpdater.updateWidget(context, glanceId)
-                    WidgetUpdater.updateWidgets(
-                        context,
-                        configRepository.getWidgetIdsForUri(config.fileUri)
-                            .filterNot { it == appWidgetId },
-                    )
+                    WidgetRefreshCoordinator.sync(context)
+                    WidgetRefreshScheduler.requestImmediate(context)
+                    WidgetUpdater.refreshWidgetFamily(context, appWidgetId, config.fileUri)
                 }
 
                 MutationResult.Stale -> {
-                    WidgetUpdater.updateWidget(context, glanceId)
+                    WidgetUpdater.refreshWidgetFamily(context, appWidgetId, config.fileUri)
                 }
             }
         } catch (exception: Exception) {
@@ -63,7 +60,7 @@ class ChecklistToggleActionCallback : ActionCallback {
                 appWidgetId,
                 exception.message ?: context.getString(R.string.error_update_failed),
             )
-            WidgetUpdater.updateWidget(context, glanceId)
+            WidgetUpdater.refreshWidgetFamily(context, appWidgetId, config.fileUri)
         }
     }
 }
@@ -80,14 +77,6 @@ class ChecklistRefreshActionCallback : ActionCallback {
 
         WidgetRefreshCoordinator.sync(context)
         WidgetRefreshScheduler.requestImmediate(context)
-        WidgetUpdater.updateWidget(context, glanceId)
-
-        if (config != null) {
-            WidgetUpdater.updateWidgets(
-                context,
-                configRepository.getWidgetIdsForUri(config.fileUri)
-                    .filterNot { it == appWidgetId },
-            )
-        }
+        WidgetUpdater.refreshWidgetFamily(context, appWidgetId, config?.fileUri)
     }
 }

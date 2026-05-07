@@ -3,11 +3,13 @@ package com.example.androidmdtodo.widget
 import android.content.Context
 import android.appwidget.AppWidgetManager
 import android.net.Uri
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.dp
 import androidx.glance.Button
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.action.ActionParameters
@@ -31,6 +33,7 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -132,6 +135,12 @@ private fun EmptyState(
         verticalAlignment = Alignment.Vertical.CenterVertically,
         horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
     ) {
+        if (showRefresh) {
+            Box(modifier = GlanceModifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                RefreshIcon()
+            }
+            Spacer(modifier = GlanceModifier.height(4.dp))
+        }
         Text(
             text = title,
             style = TextStyle(
@@ -146,13 +155,6 @@ private fun EmptyState(
                 color = ColorProvider(day = Color(0xFF4A5C63), night = Color(0xFFB4C5CB)),
             ),
         )
-        if (showRefresh) {
-            Spacer(modifier = GlanceModifier.height(12.dp))
-            Button(
-                text = "Refresh",
-                onClick = actionRunCallback<ChecklistRefreshActionCallback>(),
-            )
-        }
         Spacer(modifier = GlanceModifier.height(12.dp))
         Button(
             text = buttonLabel,
@@ -168,22 +170,20 @@ private fun EmptyState(
 @Composable
 private fun ReadyState(model: WidgetModel.Ready) {
     Column(modifier = GlanceModifier.fillMaxSize()) {
-        Text(
-            text = model.title,
-            style = TextStyle(
-                fontWeight = FontWeight.Bold,
-                color = ColorProvider(day = Color(0xFF1D2A30), night = Color(0xFFF2EFE6)),
-            ),
-            maxLines = 1,
-        )
-        Spacer(modifier = GlanceModifier.height(8.dp))
-        Text(
-            text = "Refresh",
-            modifier = GlanceModifier.clickable(actionRunCallback<ChecklistRefreshActionCallback>()),
-            style = TextStyle(
-                color = ColorProvider(day = Color(0xFF345560), night = Color(0xFF9CC3CE)),
-            ),
-        )
+        Box(modifier = GlanceModifier.fillMaxWidth()) {
+            Text(
+                text = model.title,
+                modifier = GlanceModifier.padding(end = 24.dp),
+                style = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    color = ColorProvider(day = Color(0xFF1D2A30), night = Color(0xFFF2EFE6)),
+                ),
+                maxLines = 1,
+            )
+            Box(modifier = GlanceModifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                RefreshIcon()
+            }
+        }
         Spacer(modifier = GlanceModifier.height(8.dp))
 
         if (model.items.isEmpty()) {
@@ -204,6 +204,17 @@ private fun ReadyState(model: WidgetModel.Ready) {
             }
         }
     }
+}
+
+@Composable
+private fun RefreshIcon() {
+    Image(
+        provider = ImageProvider(R.drawable.ic_widget_refresh),
+        contentDescription = "Refresh",
+        modifier = GlanceModifier
+            .size(18.dp)
+            .clickable(actionRunCallback<ChecklistRefreshActionCallback>()),
+    )
 }
 
 @Composable

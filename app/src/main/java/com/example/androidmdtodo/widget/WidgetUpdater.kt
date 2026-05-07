@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.glance.GlanceId
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.updateAll
+import com.example.androidmdtodo.data.WidgetConfigRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -58,6 +59,24 @@ object WidgetUpdater {
 
     suspend fun updateWidgets(context: Context, appWidgetIds: Iterable<Int>) {
         appWidgetIds.forEach { updateWidget(context, it) }
+    }
+
+    suspend fun refreshWidgetFamily(context: Context, appWidgetId: Int, fileUri: String?) {
+        val appContext = context.applicationContext
+        val widgetIds = if (fileUri != null) {
+            WidgetConfigRepository(appContext).getWidgetIdsForUri(fileUri).ifEmpty { listOf(appWidgetId) }
+        } else {
+            listOf(appWidgetId)
+        }
+
+        repeat(5) { attempt ->
+            updateWidgets(appContext, widgetIds)
+            updateAll(appContext)
+
+            if (attempt < 4) {
+                delay(750)
+            }
+        }
     }
 
     suspend fun updateAll(context: Context) {
