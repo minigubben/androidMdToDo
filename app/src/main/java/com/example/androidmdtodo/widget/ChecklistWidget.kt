@@ -32,6 +32,8 @@ import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
+import androidx.glance.appwidget.lazy.LazyColumn
+import androidx.glance.appwidget.lazy.items
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -68,8 +70,6 @@ class ChecklistWidget : GlanceAppWidget() {
         WidgetRefreshCoordinator.sync(context)
     }
 }
-
-private const val maxRenderedItems = 12
 
 private fun Preferences.toWidgetModel(context: Context, appWidgetId: Int): WidgetModel {
     val mode = this[WidgetStateKeys.mode] ?: WidgetStateKeys.modeUnconfigured
@@ -175,9 +175,6 @@ private fun EmptyState(
 
 @Composable
 private fun ReadyState(model: WidgetModel.Ready) {
-    val visibleItems = model.items.take(maxRenderedItems)
-    val hiddenItemCount = (model.items.size - visibleItems.size).coerceAtLeast(0)
-
     Column(modifier = GlanceModifier.fillMaxSize()) {
         Box(modifier = GlanceModifier.fillMaxWidth()) {
             Text(
@@ -203,12 +200,16 @@ private fun ReadyState(model: WidgetModel.Ready) {
                 ),
             )
         } else {
-            Column(modifier = GlanceModifier.fillMaxWidth()) {
-                visibleItems.forEach { item ->
+            LazyColumn(
+                modifier = GlanceModifier
+                    .fillMaxWidth()
+                    .defaultWeight(),
+            ) {
+                items(
+                    items = model.items,
+                    itemId = { item -> item.stableId },
+                ) { item ->
                     DocumentRow(item)
-                }
-                if (hiddenItemCount > 0) {
-                    OverflowRow(hiddenItemCount)
                 }
             }
         }
@@ -235,19 +236,6 @@ private fun DocumentRow(item: WidgetItem) {
         is WidgetItem.Paragraph -> ParagraphRow(item)
         is WidgetItem.Blank -> Spacer(modifier = GlanceModifier.height(6.dp))
     }
-}
-
-@Composable
-private fun OverflowRow(hiddenItemCount: Int) {
-    Text(
-        text = "+$hiddenItemCount more",
-        modifier = GlanceModifier
-            .fillMaxWidth()
-            .padding(top = 6.dp),
-        style = TextStyle(
-            color = ColorProvider(day = Color(0xFF6A7B81), night = Color(0xFF90A4AB)),
-        ),
-    )
 }
 
 private sealed interface WidgetModel {
@@ -313,7 +301,8 @@ private sealed interface WidgetItem {
 }
 
 private fun toWidgetItem(line: ParsedLine, documentRevision: Long): WidgetItem? {
-    val stableId = (documentRevision shl 32) xor line.lineIndex.toLong()
+    val stableId = ((documentRevision and 0x3FFF_FFFFL) shl 32) or
+        (line.lineIndex.toLong() and 0xFFFF_FFFFL)
 
     return when (line) {
         is ParsedTask -> {
