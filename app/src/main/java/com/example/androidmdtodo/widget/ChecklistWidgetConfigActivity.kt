@@ -20,7 +20,6 @@ import com.example.androidmdtodo.R
 import com.example.androidmdtodo.data.MarkdownFileRepository
 import com.example.androidmdtodo.data.WidgetConfig
 import com.example.androidmdtodo.data.WidgetConfigRepository
-import com.example.androidmdtodo.work.WidgetRefreshWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -78,7 +77,7 @@ class ChecklistWidgetConfigActivity : ComponentActivity() {
         fileListView = findViewById<ListView>(R.id.fileListView).apply {
             fileListAdapter = ArrayAdapter(
                 this@ChecklistWidgetConfigActivity,
-                android.R.layout.simple_list_item_1,
+                R.layout.file_browser_item,
                 mutableListOf(),
             )
             adapter = fileListAdapter
@@ -322,7 +321,7 @@ class ChecklistWidgetConfigActivity : ComponentActivity() {
                     lastError = null,
                 ),
             )
-            WidgetRefreshWorker.schedule(this@ChecklistWidgetConfigActivity)
+            WidgetFileObserverRegistry.sync(this@ChecklistWidgetConfigActivity)
             WidgetUpdater.updateAll(this@ChecklistWidgetConfigActivity)
 
             val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)

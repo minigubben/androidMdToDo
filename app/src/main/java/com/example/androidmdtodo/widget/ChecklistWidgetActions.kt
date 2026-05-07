@@ -12,7 +12,6 @@ import com.example.androidmdtodo.data.MarkdownFileRepository
 import com.example.androidmdtodo.data.MutationResult
 import com.example.androidmdtodo.data.TaskRef
 import com.example.androidmdtodo.data.WidgetConfigRepository
-import com.example.androidmdtodo.work.WidgetRefreshWorker
 
 class ChecklistToggleActionCallback : ActionCallback {
     override suspend fun onAction(
@@ -66,28 +65,5 @@ class ChecklistToggleActionCallback : ActionCallback {
             )
             WidgetUpdater.updateWidget(context, glanceId)
         }
-
-        WidgetRefreshWorker.schedule(context)
-    }
-}
-
-class ChecklistRefreshActionCallback : ActionCallback {
-    override suspend fun onAction(
-        context: Context,
-        glanceId: GlanceId,
-        parameters: ActionParameters,
-    ) {
-        val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(glanceId)
-        val configRepository = WidgetConfigRepository(context)
-        val config = configRepository.getConfig(appWidgetId)
-        WidgetUpdater.updateWidget(context, glanceId)
-        if (config != null) {
-            WidgetUpdater.updateWidgets(
-                context,
-                configRepository.getWidgetIdsForUri(config.fileUri)
-                    .filterNot { it == appWidgetId },
-            )
-        }
-        WidgetRefreshWorker.schedule(context)
     }
 }

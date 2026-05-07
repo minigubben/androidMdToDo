@@ -60,7 +60,7 @@ class ChecklistWidget : GlanceAppWidget() {
                 ?: return@runCatching WidgetModel.Unconfigured(appWidgetId)
             val document = fileRepository.read(Uri.parse(config.fileUri))
             configRepository.clearError(appWidgetId)
-            val items = parser.parseLines(document).map(::toWidgetItem)
+            val items = parser.parseLines(document).mapNotNull(::toWidgetItem)
             WidgetModel.Ready(
                 appWidgetId = appWidgetId,
                 title = config.displayName,
@@ -85,6 +85,7 @@ class ChecklistWidget : GlanceAppWidget() {
     override suspend fun onDelete(context: Context, glanceId: androidx.glance.GlanceId) {
         val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(glanceId)
         WidgetConfigRepository(context).deleteConfig(appWidgetId)
+        WidgetFileObserverRegistry.sync(context)
     }
 }
 
@@ -157,49 +158,33 @@ private fun EmptyState(
 
 @Composable
 private fun ReadyState(model: WidgetModel.Ready) {
-    Box(modifier = GlanceModifier.fillMaxSize()) {
-        Column(modifier = GlanceModifier.fillMaxSize()) {
-            Text(
-                text = model.title,
-                modifier = GlanceModifier.padding(end = 20.dp),
-                style = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    color = ColorProvider(day = Color(0xFF1D2A30), night = Color(0xFFF2EFE6)),
-                ),
-                maxLines = 1,
-            )
-            Spacer(modifier = GlanceModifier.height(8.dp))
+    Column(modifier = GlanceModifier.fillMaxSize()) {
+        Text(
+            text = model.title,
+            style = TextStyle(
+                fontWeight = FontWeight.Bold,
+                color = ColorProvider(day = Color(0xFF1D2A30), night = Color(0xFFF2EFE6)),
+            ),
+            maxLines = 1,
+        )
+        Spacer(modifier = GlanceModifier.height(8.dp))
 
-            if (model.items.isEmpty()) {
-                Text(
-                    text = "Nothing to show.",
-                    style = TextStyle(
-                        color = ColorProvider(day = Color(0xFF4A5C63), night = Color(0xFFB4C5CB)),
-                    ),
-                )
-            } else {
-                LazyColumn(modifier = GlanceModifier.fillMaxWidth()) {
-                    items(
-                        items = model.items,
-                        itemId = { item -> item.stableId },
-                    ) { item ->
-                        DocumentRow(item)
-                    }
-                }
-            }
-        }
-        Box(
-            modifier = GlanceModifier.fillMaxWidth(),
-            contentAlignment = Alignment.TopEnd,
-        ) {
+        if (model.items.isEmpty()) {
             Text(
-                text = "↻",
-                modifier = GlanceModifier.clickable(actionRunCallback<ChecklistRefreshActionCallback>()),
+                text = "Nothing to show.",
                 style = TextStyle(
-                    fontWeight = FontWeight.Bold,
                     color = ColorProvider(day = Color(0xFF4A5C63), night = Color(0xFFB4C5CB)),
                 ),
             )
+        } else {
+            LazyColumn(modifier = GlanceModifier.fillMaxWidth()) {
+                items(
+                    items = model.items,
+                    itemId = { item -> item.stableId },
+                ) { item ->
+                    DocumentRow(item)
+                }
+            }
         }
     }
 }
@@ -277,19 +262,25 @@ private sealed interface WidgetItem {
     ) : WidgetItem
 }
 
-private fun toWidgetItem(line: ParsedLine): WidgetItem {
+private fun toWidgetItem(line: ParsedLine): WidgetItem? {
     return when (line) {
-        is ParsedTask -> WidgetItem.Task(
-            stableId = line.lineIndex.toLong(),
-            text = line.displayText,
-            ref = TaskRef(
-                lineIndex = line.lineIndex,
-                normalizedText = line.normalizedText,
-                occurrenceIndex = line.occurrenceIndex,
-            ),
-            isChecked = line.isChecked,
-            indentLevel = indentLevel(line.indentation),
-        )
+        is ParsedTask -> {
+            if (line.isChecked) {
+                null
+            } else {
+                WidgetItem.Task(
+                    stableId = line.lineIndex.toLong(),
+                    text = line.displayText,
+                    ref = TaskRef(
+                        lineIndex = line.lineIndex,
+                        normalizedText = line.normalizedText,
+                        occurrenceIndex = line.occurrenceIndex,
+                    ),
+                    isChecked = line.isChecked,
+                    indentLevel = indentLevel(line.indentation),
+                )
+            }
+        }
 
         is ParsedHeader -> WidgetItem.Header(
             stableId = line.lineIndex.toLong(),
