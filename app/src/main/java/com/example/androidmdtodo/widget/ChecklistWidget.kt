@@ -20,8 +20,6 @@ import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.actionRunCallback
-import androidx.glance.appwidget.lazy.LazyColumn
-import androidx.glance.appwidget.lazy.items
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.color.ColorProvider
@@ -94,6 +92,8 @@ class ChecklistWidget : GlanceAppWidget() {
         WidgetRefreshCoordinator.sync(context)
     }
 }
+
+private const val maxRenderedItems = 12
 
 @Composable
 private fun ChecklistWidgetContent(model: WidgetModel) {
@@ -172,6 +172,9 @@ private fun EmptyState(
 
 @Composable
 private fun ReadyState(model: WidgetModel.Ready) {
+    val visibleItems = model.items.take(maxRenderedItems)
+    val hiddenItemCount = (model.items.size - visibleItems.size).coerceAtLeast(0)
+
     Column(modifier = GlanceModifier.fillMaxSize()) {
         Box(modifier = GlanceModifier.fillMaxWidth()) {
             Text(
@@ -197,12 +200,12 @@ private fun ReadyState(model: WidgetModel.Ready) {
                 ),
             )
         } else {
-            LazyColumn(modifier = GlanceModifier.fillMaxWidth()) {
-                items(
-                    items = model.items,
-                    itemId = { item -> item.stableId },
-                ) { item ->
+            Column(modifier = GlanceModifier.fillMaxWidth()) {
+                visibleItems.forEach { item ->
                     DocumentRow(item)
+                }
+                if (hiddenItemCount > 0) {
+                    OverflowRow(hiddenItemCount)
                 }
             }
         }
@@ -229,6 +232,19 @@ private fun DocumentRow(item: WidgetItem) {
         is WidgetItem.Paragraph -> ParagraphRow(item)
         is WidgetItem.Blank -> Spacer(modifier = GlanceModifier.height(6.dp))
     }
+}
+
+@Composable
+private fun OverflowRow(hiddenItemCount: Int) {
+    Text(
+        text = "+$hiddenItemCount more",
+        modifier = GlanceModifier
+            .fillMaxWidth()
+            .padding(top = 6.dp),
+        style = TextStyle(
+            color = ColorProvider(day = Color(0xFF6A7B81), night = Color(0xFF90A4AB)),
+        ),
+    )
 }
 
 private sealed interface WidgetModel {
