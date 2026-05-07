@@ -37,4 +37,29 @@ class MarkdownChecklistParserTest {
         assertEquals(0, tasks[0].occurrenceIndex)
         assertEquals(1, tasks[1].occurrenceIndex)
     }
+
+    @Test
+    fun parsesHeadersParagraphsAndPlainLists() {
+        val document = """
+            # Today
+
+            Intro paragraph
+            - plain bullet
+            1. numbered item
+            ## Later
+            - [ ] Check me
+        """.trimIndent()
+
+        val lines = parser.parseLines(document)
+
+        assertTrue(lines[0] is ParsedHeader)
+        assertTrue(lines[1] is ParsedBlankLine)
+        assertTrue(lines[2] is ParsedParagraph)
+        assertTrue(lines[3] is ParsedListItem)
+        assertTrue(lines[4] is ParsedListItem)
+        assertTrue(lines[5] is ParsedHeader)
+        assertTrue(lines[6] is ParsedTask)
+        assertEquals("plain bullet", (lines[3] as ParsedListItem).text)
+        assertEquals("1.", (lines[4] as ParsedListItem).marker)
+    }
 }

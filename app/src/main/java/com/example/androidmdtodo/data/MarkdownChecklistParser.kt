@@ -2,35 +2,87 @@ package com.example.androidmdtodo.data
 
 class MarkdownChecklistParser {
     private val taskRegex = Regex("""^(\s*)([-*+])\s+\[( |x|X)]\s*(.*)$""")
+    private val headerRegex = Regex("""^\s{0,3}(#{1,6})\s+(.*?)\s*$""")
+    private val unorderedListRegex = Regex("""^(\s*)([-*+])\s+(.*)$""")
+    private val orderedListRegex = Regex("""^(\s*)(\d+)([.)])\s+(.*)$""")
 
     fun parse(document: String): List<ParsedTask> {
+        return parseLines(document).filterIsInstance<ParsedTask>()
+    }
+
+    fun parseLines(document: String): List<ParsedLine> {
         if (document.isEmpty()) return emptyList()
 
         val lines = splitLines(document)
         val occurrences = mutableMapOf<String, Int>()
-        val parsedTasks = mutableListOf<ParsedTask>()
+        val parsedLines = mutableListOf<ParsedLine>()
 
         lines.forEachIndexed { index, rawLine ->
             val line = rawLine.removeSuffix("\r")
-            val match = taskRegex.matchEntire(line) ?: return@forEachIndexed
+            if (line.isBlank()) {
+                parsedLines += ParsedBlankLine(lineIndex = index)
+                return@forEachIndexed
+            }
 
-            val normalizedText = normalizeTaskText(match.groupValues[4])
-            val occurrenceIndex = occurrences.getOrDefault(normalizedText, 0)
-            occurrences[normalizedText] = occurrenceIndex + 1
+            val taskMatch = taskRegex.matchEntire(line)
+            if (taskMatch != null) {
+                val normalizedText = normalizeTaskText(taskMatch.groupValues[4])
+                val occurrenceIndex = occurrences.getOrDefault(normalizedText, 0)
+                occurrences[normalizedText] = occurrenceIndex + 1
 
-            parsedTasks += ParsedTask(
+                parsedLines += ParsedTask(
+                    lineIndex = index,
+                    normalizedText = normalizedText,
+                    originalLine = line,
+                    isChecked = taskMatch.groupValues[3] != " ",
+                    displayText = taskMatch.groupValues[4].trim(),
+                    bulletMarker = taskMatch.groupValues[2],
+                    indentation = taskMatch.groupValues[1],
+                    occurrenceIndex = occurrenceIndex,
+                )
+                return@forEachIndexed
+            }
+
+            val headerMatch = headerRegex.matchEntire(line)
+            if (headerMatch != null) {
+                parsedLines += ParsedHeader(
+                    lineIndex = index,
+                    level = headerMatch.groupValues[1].length,
+                    text = headerMatch.groupValues[2].trim().trimEnd('#').trim(),
+                )
+                return@forEachIndexed
+            }
+
+            val orderedListMatch = orderedListRegex.matchEntire(line)
+            if (orderedListMatch != null) {
+                parsedLines += ParsedListItem(
+                    lineIndex = index,
+                    text = orderedListMatch.groupValues[4].trim(),
+                    marker = orderedListMatch.groupValues[2] + orderedListMatch.groupValues[3],
+                    indentation = orderedListMatch.groupValues[1],
+                )
+                return@forEachIndexed
+            }
+
+            val unorderedListMatch = unorderedListRegex.matchEntire(line)
+            if (unorderedListMatch != null) {
+                parsedLines += ParsedListItem(
+                    lineIndex = index,
+                    text = unorderedListMatch.groupValues[3].trim(),
+                    marker = unorderedListMatch.groupValues[2],
+                    indentation = unorderedListMatch.groupValues[1],
+                )
+                return@forEachIndexed
+            }
+
+            parsedLines += ParsedParagraph(
                 lineIndex = index,
-                normalizedText = normalizedText,
-                originalLine = line,
-                isChecked = match.groupValues[3] != " ",
-                displayText = match.groupValues[4].trim(),
-                bulletMarker = match.groupValues[2],
-                indentation = match.groupValues[1],
-                occurrenceIndex = occurrenceIndex,
+                text = line.trim(),
+                indentation = line.takeWhile { it.isWhitespace() },
             )
         }
 
-        return parsedTasks
+        return parsedLines
     }
 
     private fun normalizeTaskText(text: String): String {
