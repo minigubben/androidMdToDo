@@ -1,0 +1,36 @@
+FROM gradle:8.11.1-jdk17 AS builder
+
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV ANDROID_HOME=/opt/android-sdk
+ENV PATH=${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools
+
+USER root
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends wget unzip ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p ${ANDROID_HOME}/cmdline-tools \
+    && wget -q https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip -O /tmp/cmdline-tools.zip \
+    && unzip -q /tmp/cmdline-tools.zip -d /tmp \
+    && mv /tmp/cmdline-tools ${ANDROID_HOME}/cmdline-tools/latest \
+    && rm -rf /tmp/cmdline-tools.zip /tmp/cmdline-tools \
+    && yes | sdkmanager --licenses \
+    && sdkmanager \
+        "platform-tools" \
+        "platforms;android-36" \
+        "build-tools;36.0.0"
+
+RUN chown -R gradle:gradle ${ANDROID_HOME}
+
+USER gradle
+WORKDIR /workspace
+
+COPY --chown=gradle:gradle . /workspace
+
+ARG GRADLE_TASKS="assembleDebug"
+RUN gradle --no-daemon ${GRADLE_TASKS}
+
+FROM alpine:3.21 AS export
+WORKDIR /out
+COPY --from=builder /workspace/app/build /out/app/build

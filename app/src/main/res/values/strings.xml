@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Markdown Checklist Widget</string>
+    <string name="widget_name">Checklist Widget</string>
+    <string name="widget_loading">Loading checklist…</string>
+    <string name="widget_config_title">Connect widget to a markdown file</string>
+    <string name="widget_config_body">Pick one markdown file from your Obsidian vault. This widget instance will watch that file only.</string>
+    <string name="widget_config_button">Choose markdown file</string>
+    <string name="main_description">Add a home-screen widget for an Obsidian markdown checklist. Each widget instance can point at a different file.</string>
+    <string name="main_pin_widget">Add widget</string>
+    <string name="main_status_idle">Use the button above or add the widget from the launcher.</string>
+    <string name="pin_widget_requested">Widget pin request sent. Finish setup in the launcher picker.</string>
+    <string name="pin_widget_unavailable">Launcher widget pinning is not available here. Add the widget manually from the home screen.</string>
+    <string name="error_unknown">Unable to load the markdown checklist.</string>
+    <string name="error_update_failed">Unable to update the markdown file.</string>
+</resources>
