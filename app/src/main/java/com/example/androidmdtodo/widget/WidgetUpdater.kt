@@ -1,10 +1,11 @@
 package com.example.androidmdtodo.widget
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import android.util.Log
 import androidx.glance.GlanceId
 import androidx.glance.appwidget.GlanceAppWidgetManager
-import androidx.glance.appwidget.updateAll
 import com.example.androidmdtodo.data.WidgetConfigRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,6 +18,8 @@ object WidgetUpdater {
 
     suspend fun updateWidget(context: Context, glanceId: GlanceId) {
         runCatching {
+            val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(glanceId)
+            WidgetStateStore.sync(context, glanceId, appWidgetId)
             ChecklistWidget().update(context, glanceId)
         }.onFailure { exception ->
             Log.w("WidgetUpdater", "Failed to refresh widget", exception)
@@ -80,10 +83,8 @@ object WidgetUpdater {
     }
 
     suspend fun updateAll(context: Context) {
-        runCatching {
-            ChecklistWidget().updateAll(context)
-        }.onFailure { exception ->
-            Log.w("WidgetUpdater", "Failed to refresh all widgets", exception)
-        }
+        val appWidgetIds = AppWidgetManager.getInstance(context)
+            .getAppWidgetIds(ComponentName(context, ChecklistWidgetReceiver::class.java))
+        updateWidgets(context, appWidgetIds.asIterable())
     }
 }

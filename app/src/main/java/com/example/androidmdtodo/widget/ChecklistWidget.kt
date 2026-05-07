@@ -1,8 +1,7 @@
 package com.example.androidmdtodo.widget
 
 import android.content.Context
-import android.appwidget.AppWidgetManager
-import android.net.Uri
+import androidx.datastore.preferences.core.Preferences
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -16,6 +15,7 @@ import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
 import androidx.glance.action.clickable
 import androidx.glance.action.actionStartActivity
+import androidx.glance.currentState
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.SizeMode
@@ -35,6 +35,7 @@ import androidx.glance.layout.size
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import androidx.glance.state.PreferencesGlanceStateDefinition
 import com.example.androidmdtodo.R
 import com.example.androidmdtodo.data.ParsedBlankLine
 import com.example.androidmdtodo.data.ParsedHeader
@@ -42,44 +43,19 @@ import com.example.androidmdtodo.data.ParsedLine
 import com.example.androidmdtodo.data.ParsedListItem
 import com.example.androidmdtodo.data.ParsedParagraph
 import com.example.androidmdtodo.data.MarkdownChecklistParser
-import com.example.androidmdtodo.data.MarkdownFileRepository
 import com.example.androidmdtodo.data.ParsedTask
 import com.example.androidmdtodo.data.TaskRef
 import com.example.androidmdtodo.data.WidgetConfigRepository
 
 class ChecklistWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Responsive(setOf(DpSize(180.dp, 120.dp)))
+    override val stateDefinition = PreferencesGlanceStateDefinition
 
     override suspend fun provideGlance(context: Context, id: androidx.glance.GlanceId) {
         val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
-        val configRepository = WidgetConfigRepository(context)
-        val fileRepository = MarkdownFileRepository(context)
-        val parser = MarkdownChecklistParser()
-
-        val model = runCatching {
-            val config = configRepository.getConfig(appWidgetId)
-                ?: return@runCatching WidgetModel.Unconfigured(appWidgetId)
-            val document = fileRepository.read(Uri.parse(config.fileUri))
-            val documentRevision = document.hashCode().toLong()
-            configRepository.clearError(appWidgetId)
-            val items = parser.parseLines(document).mapNotNull { line ->
-                toWidgetItem(line, documentRevision)
-            }
-            WidgetModel.Ready(
-                appWidgetId = appWidgetId,
-                title = config.displayName,
-                items = items,
-            )
-        }.getOrElse { exception ->
-            val config = configRepository.getConfig(appWidgetId)
-            WidgetModel.Error(
-                appWidgetId = appWidgetId,
-                title = config?.displayName ?: context.getString(R.string.widget_name),
-                message = config?.lastError ?: exception.message ?: context.getString(R.string.error_unknown),
-            )
-        }
 
         provideContent {
+            val model = currentState<Preferences>().toWidgetModel(context, appWidgetId)
             GlanceTheme {
                 ChecklistWidgetContent(model = model)
             }
@@ -94,6 +70,33 @@ class ChecklistWidget : GlanceAppWidget() {
 }
 
 private const val maxRenderedItems = 12
+
+private fun Preferences.toWidgetModel(context: Context, appWidgetId: Int): WidgetModel {
+    val mode = this[WidgetStateKeys.mode] ?: WidgetStateKeys.modeUnconfigured
+    return when (mode) {
+        WidgetStateKeys.modeReady -> {
+            val document = this[WidgetStateKeys.document].orEmpty()
+            val documentRevision = document.hashCode().toLong()
+            val parser = MarkdownChecklistParser()
+            val items = parser.parseLines(document).mapNotNull { line ->
+                toWidgetItem(line, documentRevision)
+            }
+            WidgetModel.Ready(
+                appWidgetId = appWidgetId,
+                title = this[WidgetStateKeys.title] ?: context.getString(R.string.widget_name),
+                items = items,
+            )
+        }
+
+        WidgetStateKeys.modeError -> WidgetModel.Error(
+            appWidgetId = appWidgetId,
+            title = this[WidgetStateKeys.title] ?: context.getString(R.string.widget_name),
+            message = this[WidgetStateKeys.message] ?: context.getString(R.string.error_unknown),
+        )
+
+        else -> WidgetModel.Unconfigured(appWidgetId)
+    }
+}
 
 @Composable
 private fun ChecklistWidgetContent(model: WidgetModel) {
