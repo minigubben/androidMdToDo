@@ -62,8 +62,11 @@ class ChecklistWidget : GlanceAppWidget() {
             val config = configRepository.getConfig(appWidgetId)
                 ?: return@runCatching WidgetModel.Unconfigured(appWidgetId)
             val document = fileRepository.read(Uri.parse(config.fileUri))
+            val documentRevision = document.hashCode().toLong()
             configRepository.clearError(appWidgetId)
-            val items = parser.parseLines(document).mapNotNull(::toWidgetItem)
+            val items = parser.parseLines(document).mapNotNull { line ->
+                toWidgetItem(line, documentRevision)
+            }
             WidgetModel.Ready(
                 appWidgetId = appWidgetId,
                 title = config.displayName,
@@ -290,14 +293,16 @@ private sealed interface WidgetItem {
     ) : WidgetItem
 }
 
-private fun toWidgetItem(line: ParsedLine): WidgetItem? {
+private fun toWidgetItem(line: ParsedLine, documentRevision: Long): WidgetItem? {
+    val stableId = (documentRevision shl 32) xor line.lineIndex.toLong()
+
     return when (line) {
         is ParsedTask -> {
             if (line.isChecked) {
                 null
             } else {
                 WidgetItem.Task(
-                    stableId = line.lineIndex.toLong(),
+                    stableId = stableId,
                     text = line.displayText,
                     ref = TaskRef(
                         lineIndex = line.lineIndex,
@@ -311,26 +316,26 @@ private fun toWidgetItem(line: ParsedLine): WidgetItem? {
         }
 
         is ParsedHeader -> WidgetItem.Header(
-            stableId = line.lineIndex.toLong(),
+            stableId = stableId,
             text = line.text,
             level = line.level,
         )
 
         is ParsedListItem -> WidgetItem.ListItem(
-            stableId = line.lineIndex.toLong(),
+            stableId = stableId,
             text = line.text,
             marker = line.marker,
             indentLevel = indentLevel(line.indentation),
         )
 
         is ParsedParagraph -> WidgetItem.Paragraph(
-            stableId = line.lineIndex.toLong(),
+            stableId = stableId,
             text = line.text,
             indentLevel = indentLevel(line.indentation),
         )
 
         is ParsedBlankLine -> WidgetItem.Blank(
-            stableId = line.lineIndex.toLong(),
+            stableId = stableId,
         )
     }
 }
