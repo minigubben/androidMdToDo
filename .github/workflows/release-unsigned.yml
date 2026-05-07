@@ -1,0 +1,84 @@
+name: Release Unsigned APK
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish, for example v1.0.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release metadata
+        id: meta
+        shell: bash
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            tag_name="${{ inputs.tag }}"
+          else
+            tag_name="${GITHUB_REF_NAME}"
+          fi
+
+          asset_dir="dist"
+          asset_name="androidMDToDo-${tag_name}-unsigned.apk"
+          asset_path="${asset_dir}/${asset_name}"
+
+          mkdir -p "${asset_dir}"
+
+          {
+            echo "tag_name=${tag_name}"
+            echo "asset_name=${asset_name}"
+            echo "asset_path=${asset_path}"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Build unsigned release APK
+        run: scripts/docker-gradle.sh assembleRelease
+
+      - name: Stage release asset
+        shell: bash
+        run: |
+          source_path="app/build/outputs/apk/release/app-release-unsigned.apk"
+
+          if [[ ! -f "${source_path}" ]]; then
+            echo "Expected unsigned APK at ${source_path}, but it was not produced." >&2
+            exit 1
+          fi
+
+          cp "${source_path}" "${{ steps.meta.outputs.asset_path }}"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.asset_name }}
+          path: ${{ steps.meta.outputs.asset_path }}
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ steps.meta.outputs.tag_name }}
+          ASSET_PATH: ${{ steps.meta.outputs.asset_path }}
+        shell: bash
+        run: |
+          if gh release view "${TAG_NAME}" >/dev/null 2>&1; then
+            gh release upload "${TAG_NAME}" "${ASSET_PATH}" --clobber
+          else
+            gh release create "${TAG_NAME}" "${ASSET_PATH}" \
+              --title "${TAG_NAME}" \
+              --generate-notes \
+              --target "${GITHUB_SHA}"
+          fi
